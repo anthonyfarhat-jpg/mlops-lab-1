@@ -1,2 +1,4 @@
 [core]
     remote = origin
+['remote "origin"']
+    url = https://dagshub.com/anthonyfarhat-jpg/mlops-lab-1.dvc
