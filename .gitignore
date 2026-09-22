@@ -1,1 +1,7 @@
 /data
+mlflow.db
+mlruns/
+.uv-cache/
+mlflow-server.*.log
+__pycache__/
+*.py[cod]

@@ -1,0 +1,28 @@
+Lab 1 Answers
+=============
+
+1. `pyproject.toml` contains the project settings and dependencies. `uv.lock`
+   locks their exact versions, `.python-version` selects Python, `.gitignore`
+   excludes unwanted files, and `README.md`/`src` hold the docs and code.
+
+2. `.dvc/config` stores DVC settings, `.dvc/.gitignore` ignores DVC cache files,
+   and `.dvcignore` tells DVC what to skip. These files should be pushed to Git.
+
+3. With `--global`, credentials are stored in the user's DVC config. Other
+   choices are `--local` and `--project`. Credentials should never be pushed to
+   GitHub; local config or environment variables are safer.
+
+4. DVC added `data/` to `.gitignore`, so Git tracks the small pointer file while
+   DVC tracks the actual dataset.
+
+5. Yes, `data.dvc` is a small YAML pointer containing the data hash, size, file
+   count, and path.
+
+6. GitHub contains the code and `data.dvc`, but not the dataset. DagsHub stores
+   and displays the actual data uploaded by `dvc push`.
+
+7. A Git clone only contains the pointer file. Running `dvc pull` downloads the
+   `data/` folder.
+
+8. No. Checking out the older Git commit and running `dvc checkout` restored the
+   older data version, which did not contain the processed folders.

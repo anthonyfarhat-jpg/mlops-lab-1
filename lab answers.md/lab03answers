@@ -1,0 +1,32 @@
+Lab 3 Answers
+=============
+
+1. My model was registered as version 1. A run artifact belongs to one training
+   run, while a registered model has a shared name, versions, and aliases.
+
+2. Aliases like `champion` and `challenger` replaced the old stages. Versions
+   keep model history, and an alias can easily point to a newer version.
+
+3. The MLflow URI avoids hard-coding a local `.pth` path. To use a newer model,
+   I only need to move the `champion` alias and restart the API.
+
+4. Copying dependency files first lets Docker reuse the dependency cache. If I
+   only edit `serve.py`, Docker rebuilds the source layer instead of reinstalling
+   everything.
+
+5. My final image was about 2.06 GB. PyTorch and the Python dependencies were
+   the largest layers. The multi-stage build keeps builder tools out of the
+   final image.
+
+6. Without `.dockerignore`, Docker sends unnecessary files, making builds slower
+   and possibly larger. A Windows `.venv` could also break the Linux image.
+
+7. Inside the container, `127.0.0.1` means the container itself.
+   `host.docker.internal` points back to the Windows host.
+
+8. Yes. A new container can use the same image because the code and dependencies
+   are already inside it. The model is loaded from MLflow when the container
+   starts.
+
+9. The image still needs a versioned tag and must be pushed to a container
+   registry so another machine can pull the exact same image.

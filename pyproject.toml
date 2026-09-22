@@ -9,11 +9,27 @@ authors = [
 requires-python = ">=3.14"
 dependencies = [
     "dvc>=3.67.1",
+    "fastapi>=0.116.0",
     "pillow>=12.3.0",
+    "mlflow>=2.18.0",
+    "python-multipart>=0.0.20",
+    "torch>=2.6.0",
+    "torchvision>=0.21.0",
+    "scikit-learn>=1.7.2",
+    "uvicorn>=0.35.0",
 ]
 
 [project.scripts]
 mlops-lab-1 = "mlops_lab_1:main"
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+torchvision = { index = "pytorch-cpu" }
 
 [build-system]
 requires = ["uv_build>=0.12.10,<0.13.0"]

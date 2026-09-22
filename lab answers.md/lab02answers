@@ -1,0 +1,29 @@
+Lab 2 Answers
+=============
+
+1. `pyproject.toml` gained MLflow, PyTorch, torchvision, and scikit-learn.
+   `uv.lock` recorded their exact versions and dependencies.
+
+2. `--backend-store-uri` stores run metadata such as parameters and metrics.
+   `--default-artifact-root` stores larger files such as models and plots.
+
+3. `mlflow.db` and `mlruns/` are local experiment outputs. Tracking them would
+   bloat the repository and could cause database merge conflicts.
+
+4. MLflow creates the `food11` experiment, gives it an ID, and makes it active.
+
+5. Parameters are fixed settings such as learning rate. Metrics are changing
+   values such as loss and accuracy. The `step` records their epoch or iteration
+   so MLflow can plot progress.
+
+6. The model is stored under
+   `mlruns/<experiment_id>/<run_id>/artifacts/model/`.
+
+7. A learning rate of `0.001` performed best. Higher is not always better;
+   `0.01` was too large and trained less reliably.
+
+8. Lower learning rates gave lower loss. The best result came from `lr=0.001`
+   with a batch size of 64, reaching about 31.2% validation accuracy.
+
+9. The best run used `lr=0.001` and batch size 64. Its validation accuracy was
+   about 31.2%, and its run ID was `0b105c678b6445e0a5bbc168907bbd53`.
