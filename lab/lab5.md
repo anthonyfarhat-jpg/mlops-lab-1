@@ -27,9 +27,12 @@
 5. `needs: test` skips `smoke` when `test` fails. Without it, both jobs start
    independently and the image may be built even though unit tests are red.
 
-6. The measured GitHub run durations are recorded after the workflow runs.
-   Later runs should benefit from uv and Docker/GitHub Actions caches, mainly in
-   dependency synchronization and image build layers.
+6. The first run took 5 minutes 23 seconds: `test` took 19 seconds, `smoke`
+   took 88 seconds, and `push` took 205 seconds. The empty-commit run took
+   2 minutes 25 seconds: `test` took 18 seconds, `smoke` took 90 seconds, and
+   `push` took only 24 seconds. The GHCR build/publish job got much faster
+   because `cache-from: type=gha` reused the image layers; the smoke job uses a
+   fresh runner and a plain `docker build`, so it did not reuse that cache.
 
 7. A commit SHA is immutable and traceable to exact source. With `latest`, one
    machine can pull before a new release and another afterward, leaving both
@@ -40,9 +43,12 @@
    a compromised step could modify code, workflows, releases, issues, secrets,
    or other repository resources allowed by that token.
 
-9. The demonstration pull request and branch-protection result are recorded
-   after configuration. Required checks give the team an enforceable, shared,
-   reproducible gate instead of relying on each developer's laptop and memory.
+9. Pull request #1 initially showed failed `test` checks and GitHub reported it
+   as `blocked`, so it could not be merged under the `main` protection rule.
+   After fixing the category mapping, both `test` and `smoke` passed, its state
+   changed to `clean`, and it was merged. Required checks give the team an
+   enforceable, shared, reproducible gate instead of relying on each
+   developer's laptop and memory.
 
 10. Version 2 (learning rate `0.000001`, one epoch) scored 0.0896 and was
     assigned `challenger`. Version 3 (learning rate `0.001`, five epochs)
