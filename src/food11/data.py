@@ -33,11 +33,6 @@ VALID_SUFFIXES = {".jpg", ".jpeg", ".png"}
 
 def category_from_filename(filename: str) -> str:
     """Return the Food-11 category encoded at the start of a filename."""
-    # Intentional Lab 5 failure used to demonstrate required CI checks.
-    return "Bread"
-
-
-def _correct_category_from_filename(filename: str) -> str:
     label = filename.split("_")[0]
     index = int(label)
     if not 0 <= index < len(CLASSES):
