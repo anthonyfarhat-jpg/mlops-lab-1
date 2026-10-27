@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import hashlib
 import shutil
 from pathlib import Path
 
 from PIL import Image
 
-CATEGORY_NAMES = [
+CLASSES = [
     "Bread",
     "Dairy product",
     "Dessert",
@@ -19,6 +20,9 @@ CATEGORY_NAMES = [
     "Vegetable-Fruit",
 ]
 
+# Kept for compatibility with the training and serving code from earlier labs.
+CATEGORY_NAMES = CLASSES
+
 RAW_ROOT = Path("data/food11_raw")
 PROCESSED_ROOT = Path("data/food11_processed")
 PROCESSED_MINI_ROOT = Path("data/food11_processed_mini")
@@ -27,12 +31,23 @@ SPLITS = ("training", "evaluation", "validation")
 VALID_SUFFIXES = {".jpg", ".jpeg", ".png"}
 
 
-def label_to_category(file_name: str) -> str:
-    label = file_name.split("_")[0]
+def category_from_filename(filename: str) -> str:
+    """Return the Food-11 category encoded at the start of a filename."""
+    label = filename.split("_")[0]
     index = int(label)
-    if not 0 <= index < len(CATEGORY_NAMES):
-        raise ValueError(f"Unexpected label {label!r} in filename {file_name!r}")
-    return CATEGORY_NAMES[index]
+    if not 0 <= index < len(CLASSES):
+        raise ValueError(f"Unexpected label {label!r} in filename {filename!r}")
+    return CLASSES[index]
+
+
+def label_to_category(file_name: str) -> str:
+    """Backward-compatible name used by the earlier data preparation code."""
+    return category_from_filename(file_name)
+
+
+def resize_image(img: Image.Image, size: int = 128) -> Image.Image:
+    """Convert an image to RGB and resize it to a square."""
+    return img.convert("RGB").resize((size, size), Image.Resampling.BILINEAR)
 
 
 def collect_class_files(split_dir: Path) -> dict[str, list[Path]]:
@@ -49,14 +64,15 @@ def prepare_dataset(source_root: Path, destination_root: Path, max_images_per_cl
     if destination_root.exists():
         shutil.rmtree(destination_root)
     destination_root.mkdir(parents=True, exist_ok=True)
+    seen_hashes: set[str] = set()
 
     for split in SPLITS:
         split_source = source_root / split
         if not split_source.exists():
             continue
 
+        category_files = collect_class_files(split_source)
         for category in CATEGORY_NAMES:
-            category_files = collect_class_files(split_source)
             files = category_files[category]
             if max_images_per_class is not None:
                 files = files[:max_images_per_class]
@@ -65,9 +81,12 @@ def prepare_dataset(source_root: Path, destination_root: Path, max_images_per_cl
             target_dir.mkdir(parents=True, exist_ok=True)
 
             for image_path in files:
+                digest = hashlib.md5(image_path.read_bytes()).hexdigest()
+                if digest in seen_hashes:
+                    continue
+                seen_hashes.add(digest)
                 with Image.open(image_path) as image:
-                    rgb_image = image.convert("RGB")
-                    resized = rgb_image.resize((128, 128), Image.Resampling.BILINEAR)
+                    resized = resize_image(image)
                     output_path = target_dir / image_path.name
                     resized.save(output_path, format="JPEG")
 

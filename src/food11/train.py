@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
 
-import mlflow
 import mlflow.pytorch
 import torch
-import torch.nn as nn
+from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import datasets, models, transforms
+
+import mlflow
 
 
 def parse_args() -> argparse.Namespace:
@@ -17,6 +19,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--epochs", type=int, default=5)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--register-model", action="store_true")
     return parser.parse_args()
 
 
@@ -99,7 +102,7 @@ def evaluate(model: nn.Module, loader: DataLoader, criterion, device: torch.devi
 def main() -> None:
     args = parse_args()
     dataset_root = get_dataset_root(args.dataset)
-    mlflow.set_tracking_uri("http://127.0.0.1:5000")
+    mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000"))
     mlflow.set_experiment("food11")
 
     torch.manual_seed(42)
@@ -137,12 +140,16 @@ def main() -> None:
         mlflow.log_metric("final_val_loss", final_val_loss, step=args.epochs)
 
         example_input = torch.randn(1, 3, 128, 128, device=device)
-        mlflow.pytorch.log_model(
+        model_info = mlflow.pytorch.log_model(
             model,
             name="model",
             input_example=example_input,
             serialization_format="pickle",
         )
+
+        if args.register_model:
+            version = mlflow.register_model(model_info.model_uri, "food11")
+            print(f"Registered food11 model version: {version.version}")
 
         print(f"Final validation accuracy: {final_val_accuracy:.4f}")
 
