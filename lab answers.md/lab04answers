@@ -1,0 +1,53 @@
+Lab 4 Answers
+=============
+
+1. Without a volume, MLflow writes to the container's writable layer. The data
+   remains while that container exists, but removing the container deletes it.
+   A new container made from the image starts with an empty MLflow database.
+
+2. A named volume is managed by Docker, is portable across Compose runs, and
+   avoids host path and permission differences. A bind mount would also persist
+   the files and can be convenient for inspecting them during development, but
+   it couples the setup to a particular host directory.
+
+3. Docker Compose creates a private network and embedded DNS records for its
+   services. On that network, `mlflow` resolves to the MLflow container. A
+   standalone Lab 3 container was not on such a network, so that name did not
+   exist and it needed a special route to the host instead.
+
+4. The environment variable makes the same frontend image usable in different
+   environments. In Compose it uses `http://inference:8000`; when run on its own
+   it can use the default localhost URL or be pointed at another API.
+
+5. Only other containers need direct access to inference. The frontend reaches
+   `http://inference:8000` over the private Compose network, so no host port is
+   required. MLflow and Streamlit publish ports because a human opens their UIs.
+
+6. `depends_on` only starts MLflow first. If inference tries to load the model
+   before MLflow is ready, its startup raises an exception and its container
+   exits. It can then be restarted after MLflow is ready. A production-quality
+   setup would add a health check plus readiness-aware dependency handling or
+   retry model loading with backoff.
+
+7. `mlflow` publishes port 5000 and `frontend` publishes port 8501. `inference`
+   has no published port. This matches the Compose file.
+
+8. The running inference process keeps using the model loaded at startup. After
+   moving the `champion` alias to the new version, `docker compose restart
+   inference` reloads the model selected by that alias. (`Staging` in the lab
+   handout is the older MLflow stage terminology.)
+
+9. Restarting creates a new API process from the existing image. Code and
+   dependencies are baked into the image, while the model is fetched from MLflow
+   during application startup, so changing only the registered model does not
+   require rebuilding the image.
+
+10. A normal `docker compose down` removes containers and the network but keeps
+    the named volume, so registrations, aliases, and artifacts survive. Adding
+    `-v` deletes the named volume too; the next `up` creates an empty MLflow
+    database and artifact store.
+
+11. Compose is a single-host orchestrator. Multiple inference replicas need an
+    orchestrator and load balancer/service discovery (for example Kubernetes or
+    Docker Swarm). MLflow also needs an external highly available database and
+    shared object storage, plus scheduling/failover across multiple machines.
